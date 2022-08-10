@@ -1,0 +1,12 @@
+pandas
+boto3
+numpy
+bs4
+requests
+lxml
+kafka-python
+mysql-connector-python
+pydantic
+fastapi
+uvicorn
+gunicorn

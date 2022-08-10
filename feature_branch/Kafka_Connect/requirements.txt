@@ -1,0 +1,5 @@
+pandas
+numpy
+requests
+kafka-python
+mysql-connector-python
