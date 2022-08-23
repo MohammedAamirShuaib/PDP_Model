@@ -1,0 +1,7 @@
+FROM python:3.7.9
+WORKDIR /app
+COPY Kafka_Connect/requirements.txt .
+RUN pip install -r requirements.txt
+COPY Kafka_Connect/kafka_consumer.py .
+COPY config/analytics_models/test_config.ini config/
+CMD [ "python", "./kafka_consumer.py"]

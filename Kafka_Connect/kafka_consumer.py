@@ -4,11 +4,14 @@ import json
 import requests
 import configparser
 import threading
+import os
 
+config_file = "config/"+os.listdir('config')[0]
 
+print(config_file)
 def read_config():
   config = configparser.ConfigParser()
-  config.read('config/configurations.ini', encoding='utf-8')
+  config.read(config_file, encoding='utf-8')
   return config
 
 config = read_config()
@@ -38,10 +41,11 @@ for msg in consumer:
   try:
     config = read_config()
     msg_json = json.loads(msg.value.decode('utf-8'))
-    topic = msg.topic
-    subdict = {'topic':str(topic), 'respId':str(msg_json['respId']), 'surveyId':str(msg_json['surveyId']), 'questionId':str(msg_json['questionId']), 'token':str(msg_json['token']), 'href':str(msg_json['href']), 'htmlLink':str(msg_json['htmlLink']), 'videoLink':str(msg_json['videoLink'])}
-    print(config['APIServer']['pdp_endpoint'])
-    response_api = requests.post(config['APIServer']['pdp_endpoint'], data=json.dumps(subdict)).json()
+    msg_json['topic'] = msg.topic
+    for key, value in msg_json.items():
+      if value is None:
+          msg_json[key] = ''
+    response_api = requests.post(config['APIServer']['pdp_endpoint'], data=json.dumps(msg_json)).json()
     print(response_api)
   except Exception as e:
     print(e)

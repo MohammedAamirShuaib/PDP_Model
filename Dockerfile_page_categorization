@@ -1,0 +1,8 @@
+FROM python:3.7.9
+WORKDIR /app
+COPY Model_API/requirements.txt .
+RUN pip install -r requirements.txt
+COPY Model_API/main.py .
+COPY Model_API/page_categorization.py .
+COPY config/analytics_models/test_config.ini config/
+EXPOSE 8000

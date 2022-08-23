@@ -1,52 +1,70 @@
 from kafka import KafkaProducer
 from fastapi import FastAPI, HTTPException
-import mysql.connector
 from pydantic import BaseModel
-from pdp_model import *
+from page_categorization import *
 import json
 import configparser
+import os
 
 
 class Input_Data(BaseModel):
-    topic: str
-    respId: str
-    surveyId: str
-    questionId: str
-    token: str
+    requestString: str
+    searchInput: str
+    host: str
+    searchUrl: str
     href: str
-    htmlLink: str
+    timeSpentOnPage: str
+    longitude: str
+    latitude: str
+    locale: str
+    timeSpentOnTask: str
+    timeUnit: str
+    ipAddress: str
+    operatingSystem: str
+    browserName: str
+    city: str
+    startDate: str
+    startTime: str
+    clickedUrl: str
+    deviceName: str
+    osVersion: str
+    token: str
+    questionId: int
+    questionType: str
+    other: str
+    title: str
     videoLink: str
+    audioLink: str
+    cameraLink: str
+    imageLink: str
+    htmlLink: str
+    respId: str
+    surveyId: int
+    responseTime: str
+    topic: str
 
 
 app = FastAPI()
 
+config_file = "config/"+os.listdir('config')[0]
+print(config_file)
 def read_config():
-    config = configparser.ConfigParser()
-    config.read('config/configurations.ini', encoding='utf-8')
-    return config
-
+  config = configparser.ConfigParser()
+  config.read(config_file, encoding='utf-8')
+  return config
 
 @app.post("/pdp/")
 async def pdp(input_data:Input_Data):
+    print(input_data)
     config = read_config()
-    topic= input_data.topic
-    respId= input_data.respId
-    surveyId= input_data.surveyId
-    questionId= input_data.questionId
-    token= input_data.token
-    href= input_data.href
-    htmlLink= input_data.htmlLink
-    videoLink= input_data.videoLink
-    htmlPath = htmlLink[htmlLink.find("/downloads/")+11:]
+    input_data['htmlPath'] = input_data.htmlLink[input_data.htmlLink.find("/downloads/")+11:]
 
     # Call the PDP Model
-    page_tag = get_pdp(href, htmlPath)
-
-    # Sending data to Seisens though Kafka
-    output_dict = {'topic':topic, 'respId':respId, 'surveyId':surveyId, 'questionId':questionId, 'token':token, 'href':href, 'htmlLink':htmlLink, 'videoLink':videoLink,'PageCategory':page_tag}
+    input_data['PageCategory'] = get_pdp(input_data['href'], input_data['htmlPath'])
+    print(input_data['PageCategory'])
     producer = KafkaProducer(bootstrap_servers=eval(config['KafkaSettings']['bootstrap_servers']),
                         value_serializer=lambda x: 
                         json.dumps(x).encode('utf-8'))
-    producer.send(config['KafkaSettings']['Produce_topic'], output_dict)
-    return output_dict
+    producer.send(config['KafkaSettings']['Produce_topic'], input_data)
+    return input_data['PageCategory']
     
